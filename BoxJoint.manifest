@@ -1,0 +1,12 @@
+{
+	"autodeskProduct": "Fusion360",
+	"type": "addin",
+	"id": "629a8477-0c8d-4fb1-80f5-ea32dddbc134",
+	"author": "Mark Suska",
+	"description": {
+		"": "CNC friendly box/finger joints."
+	},
+	"version": "1.0.0",
+	"runOnStartup": true,
+	"supportedOS": "windows|mac"
+}
