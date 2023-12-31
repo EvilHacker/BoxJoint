@@ -28,10 +28,9 @@ The joint has been designed to be cuttable on a CNC machine.
 
 ## Installation
 
-This Add-In can be installed from either:
+This Add-In can be installed by either:
 
-* The Fusion 360 App Store (link TBD).
 * Using [GitHubToFusion360](https://apps.autodesk.com/FUSION/en/Detail/Index?id=789800822168335025). Paste the github link `https://github.com/EvilHacker/BoxJoint` into the [GitHubToFusion360](https://apps.autodesk.com/FUSION/en/Detail/Index?id=789800822168335025) Add-In.
-* Download the Add-In from [github](https://codeload.github.com/EvilHacker/BoxJoint/zip/refs/heads/main) and extract to:
-	* `$HOME/Library/Application Support/Autodesk/Autodesk Fusion 360/API/AddIns/` (Mac OS)
-	* `C:\Users\%USER_NAME%\AppData\Roaming\Autodesk\Autodesk Fusion 360\API\AddIns` (Windows)
+* Downloading the Add-In zip file from [github](https://codeload.github.com/EvilHacker/BoxJoint/zip/refs/heads/main) and extract to:
+	* `~/Library/Application Support/Autodesk/Autodesk Fusion 360/API/AddIns` (Mac OS)
+	* `%appdata%\Autodesk\Autodesk Fusion 360\API\AddIns` (Windows)
