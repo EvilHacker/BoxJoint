@@ -18,7 +18,13 @@ The joint has been designed to be cuttable on a CNC machine.
 
 ## Screen Shots
 
-TODO
+![BoxJoint1](https://github.com/EvilHacker/BoxJoint/assets/6175398/30556d0e-5731-4d13-a690-e96b2998a220)
+
+![BoxJoint2](https://github.com/EvilHacker/BoxJoint/assets/6175398/3521f3d9-5d79-48d2-96bd-85b8eeb5541f)
+
+![BoxJoint3](https://github.com/EvilHacker/BoxJoint/assets/6175398/80d32152-d66f-4f07-979a-e63abc7cafd5)
+
+![BoxJoint4](https://github.com/EvilHacker/BoxJoint/assets/6175398/05f251b6-883c-4303-a9a6-cdd9a2b7ca23)
 
 ## Installation
 
@@ -26,6 +32,6 @@ This Add-In can be installed from either:
 
 * The Fusion 360 App Store (link TBD).
 * Using [GitHubToFusion360](https://apps.autodesk.com/FUSION/en/Detail/Index?id=789800822168335025). Paste the github link `https://github.com/EvilHacker/BoxJoint` into the [GitHubToFusion360](https://apps.autodesk.com/FUSION/en/Detail/Index?id=789800822168335025) Add-In.
-* Download the Add-In from [github](https://codeload.github.com/EvilHacker/BoxJoint/zip/refs/heads/main) and extract to
+* Download the Add-In from [github](https://codeload.github.com/EvilHacker/BoxJoint/zip/refs/heads/main) and extract to:
 	* `$HOME/Library/Application Support/Autodesk/Autodesk Fusion 360/API/AddIns/` (Mac OS)
 	* `C:\Users\%USER_NAME%\AppData\Roaming\Autodesk\Autodesk Fusion 360\API\AddIns` (Windows)
