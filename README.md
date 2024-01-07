@@ -31,6 +31,16 @@ The joint has been designed to be cuttable on a CNC machine.
 This Add-In can be installed by either:
 
 * Using [GitHubToFusion360](https://apps.autodesk.com/FUSION/en/Detail/Index?id=789800822168335025). Paste the github link `https://github.com/EvilHacker/BoxJoint` into the [GitHubToFusion360](https://apps.autodesk.com/FUSION/en/Detail/Index?id=789800822168335025) Add-In.
-* Downloading the Add-In zip file from [github](https://codeload.github.com/EvilHacker/BoxJoint/zip/refs/heads/main) and extract to:
+* Downloading the Add-In zip file from [github](https://codeload.github.com/EvilHacker/BoxJoint/zip/refs/heads/main) and extracting it to:
 	* `~/Library/Application Support/Autodesk/Autodesk Fusion 360/API/AddIns` (Mac OS)
 	* `%appdata%\Autodesk\Autodesk Fusion 360\API\AddIns` (Windows)
+
+## Usage
+
+The Add-In can be found in the `DESIGN` Workspace, `SOLID` tab, `MODIFY` panel.
+
+Create a model with simple [butt joints](https://en.wikipedia.org/wiki/Butt_joint). Bodies to be joined should contact each other at a planar surface. Multiple bodies can be butted up against each other at any angle to form a box-like structure.
+
+To create a Box Joint, open the Box Joint Add-In and select the outside faces of the bodies to join. A Box Joint will be created between every pair of bodies that butt up against each other.
+
+A Box Joint feature can be modified at any time by selecting it in the timeline and choosing "Edit Feature".
