@@ -1,4 +1,4 @@
-# Fusion 360 creates these files when the Add-In is edited or debugged from within Fusion 360.
+# Fusion 360 generates these files when the Add-In is edited or debugged from within Fusion 360.
 /.env
 /.vscode/launch.json
 /.vscode/settings.json
