@@ -1,6 +1,6 @@
 # Box Joint
 
-This is a [Fusion 360](https://www.autodesk.com/products/fusion-360/overview) Add-In for creating CNC friendly box/finger joints.
+This is an [Autodesk Fusion 360](https://www.autodesk.com/products/fusion-360/overview) [Add-In]((https://apps.autodesk.com/FUSION/en/Detail/Index?id=3675336968156301217)) for creating CNC friendly box/finger joints.
 
 ## Editable Feature
 
@@ -30,6 +30,7 @@ The joint has been designed to be cuttable on a CNC machine.
 
 This Add-In can be installed by either:
 
+* Downloading and running the installer from the [Fusion 360 App Store](https://apps.autodesk.com/FUSION/en/Detail/Index?id=3675336968156301217).
 * Using [GitHubToFusion360](https://apps.autodesk.com/FUSION/en/Detail/Index?id=789800822168335025). Paste the github link `https://github.com/EvilHacker/BoxJoint` into the [GitHubToFusion360](https://apps.autodesk.com/FUSION/en/Detail/Index?id=789800822168335025) Add-In.
 * Downloading the Add-In [zip file](https://codeload.github.com/EvilHacker/BoxJoint/zip/refs/heads/main) from github and extracting it to:
 	* `~/Library/Application Support/Autodesk/Autodesk Fusion 360/API/AddIns` (Mac OS)
@@ -44,3 +45,8 @@ Start by creating a model with simple [butt joints](https://en.wikipedia.org/wik
 To create a Box Joint, open the Box Joint Add-In and select the outside faces of the bodies to join. A Box Joint will be created between every pair of bodies that butt up against each other.
 
 A Box Joint feature can be modified at any time by selecting it in the timeline and choosing "Edit Feature".
+
+## Example Designs
+
+* [Box](https://a360.co/3RRLTNm)
+* [Flowerpot](https://a360.co/3vydzPO)
