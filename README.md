@@ -48,5 +48,7 @@ A Box Joint feature can be modified at any time by selecting it in the timeline 
 
 ## Example Designs
 
-* [Box](https://a360.co/3RRLTNm)
-* [Flowerpot](https://a360.co/3vydzPO)
+* [Box![Box](https://github.com/EvilHacker/BoxJoint/assets/6175398/9ea6beee-c7d9-4b69-b2e3-c20a67efa259)
+](https://a360.co/3RRLTNm)
+* [Flowerpot![Flowerpot](https://github.com/EvilHacker/BoxJoint/assets/6175398/25d318fb-cdb7-48fb-8cc1-2877b58a4955)
+](https://a360.co/3vydzPO)
