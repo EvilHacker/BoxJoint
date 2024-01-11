@@ -1,6 +1,6 @@
 # Box Joint
 
-This is an [Autodesk Fusion 360](https://www.autodesk.com/products/fusion-360/overview) [Add-In]((https://apps.autodesk.com/FUSION/en/Detail/Index?id=3675336968156301217)) for creating CNC friendly box/finger joints.
+This is an [Autodesk Fusion 360](https://www.autodesk.com/products/fusion-360/overview) [Add-In](https://apps.autodesk.com/FUSION/en/Detail/Index?id=3675336968156301217) for creating CNC friendly box/finger joints.
 
 ## Editable Feature
 
@@ -48,7 +48,7 @@ A Box Joint feature can be modified at any time by selecting it in the timeline 
 
 ## Example Designs
 
-* [Box![Box](https://github.com/EvilHacker/BoxJoint/assets/6175398/9ea6beee-c7d9-4b69-b2e3-c20a67efa259)
+* [Box ![Box](https://github.com/EvilHacker/BoxJoint/assets/6175398/9ea6beee-c7d9-4b69-b2e3-c20a67efa259)
 ](https://a360.co/3RRLTNm)
-* [Flowerpot![Flowerpot](https://github.com/EvilHacker/BoxJoint/assets/6175398/25d318fb-cdb7-48fb-8cc1-2877b58a4955)
+* [Flowerpot ![Flowerpot](https://github.com/EvilHacker/BoxJoint/assets/6175398/25d318fb-cdb7-48fb-8cc1-2877b58a4955)
 ](https://a360.co/3vydzPO)
