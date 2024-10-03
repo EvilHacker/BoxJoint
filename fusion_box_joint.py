@@ -75,28 +75,30 @@ class BoxJointAddIn(FusionCustomFeatureAddIn):
 		facesSelectInput.tooltip = 'Select outside faces of bodies to join.'
 		facesSelectInput.setSelectionLimits(2)  # At least two faces needed.
 
-		input = inputs.addFloatSpinnerCommandInput(
+		input = inputs.addIntegerSpinnerCommandInput(
 			'minFingers', 'Min Fingers',
-			unitType=Parameter.UNITLESS, min=3, max=99, spinStep=2,
-			initialValue=params.minFingers.value)
+			min=3, max=99, spinStep=2,
+			initialValue=int(clamp(params.minFingers.value, 3, 99)))
 		input.expression = params.minFingers.expression
 
-		input = inputs.addFloatSpinnerCommandInput(
+		input = inputs.addIntegerSpinnerCommandInput(
 			'maxFingers', 'Max Fingers',
-			unitType=Parameter.UNITLESS, min=3, max=99, spinStep=2,
-			initialValue=params.maxFingers.value)
+			min=3, max=99, spinStep=2,
+			initialValue=int(clamp(params.maxFingers.value, 3, 99)))
 		input.expression = params.maxFingers.expression
 
 		input = inputs.addValueInput(
 			'minFingerWidth', 'Min Finger Width',
-			params.minFingerWidth.units, params.minFingerWidth.valueInput)
+			unitType=params.minFingerWidth.units,
+			initialValue=params.minFingerWidth.valueInput)
 		input.minimumValue = 0
 		input.isMinimumInclusive = False
 		input.isMinimumLimited = True
 
 		input = inputs.addValueInput(
 			'maxFingerWidth', 'Max Finger Width',
-			params.maxFingerWidth.units, params.maxFingerWidth.valueInput)
+			unitType=params.maxFingerWidth.units,
+			initialValue=params.maxFingerWidth.valueInput)
 		input.minimumValue = 0
 		input.isMinimumInclusive = False
 		input.isMinimumLimited = True
@@ -104,19 +106,21 @@ class BoxJointAddIn(FusionCustomFeatureAddIn):
 		input = inputs.addFloatSpinnerCommandInput(
 			'fingerRatio', 'Finger Ratio',
 			unitType=Parameter.UNITLESS, min=0.01, max=0.99, spinStep=0.1,
-			initialValue=params.fingerRatio.value)
+			initialValue=clamp(params.fingerRatio.value, 0.01, 0.99))
 		input.expression = params.fingerRatio.expression
 
 		input = inputs.addValueInput(
 			'margin', 'Margin',
-			params.margin.units, params.margin.valueInput)
+			unitType=params.margin.units,
+			initialValue=params.margin.valueInput)
 		input.minimumValue = 0
 		input.isMinimumInclusive = True
 		input.isMinimumLimited = True
 
 		input = inputs.addValueInput(
 			'bitDiameter', 'Tool Diameter',
-			params.bitDiameter.units, params.bitDiameter.valueInput)
+			unitType=params.bitDiameter.units,
+			initialValue=params.bitDiameter.valueInput)
 		input.minimumValue = 0
 		input.isMinimumInclusive = True
 		input.isMinimumLimited = True
