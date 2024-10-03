@@ -88,7 +88,7 @@ class UserInputError(ValueError):
 class Parameter:
 	# Indicates that all units are forbidden within an expression.
 	# Note that this is different than allowing ANY units.
-	UNITLESS = ' '
+	UNITLESS = 'rad/rad'
 
 	def __init__(self,
 		value: Union[

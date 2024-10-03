@@ -218,6 +218,7 @@ class FusionCustomFeatureAddIn:
 	def _createCustomFeature(self, params):
 		design: adsk.fusion.Design = adsk.core.Application.get().activeProduct
 		customFeatures = design.activeComponent.features.customFeatures
+		unitsManager = adsk.core.Application.get().activeProduct.unitsManager
 
 		customFeatureInput = customFeatures.createInput(self._customFeatureDef)
 
@@ -225,7 +226,7 @@ class FusionCustomFeatureAddIn:
 		for name, value in self.getCustomParameters(params).items():
 			customFeatureInput.addCustomParameter(
 				name, self.getCustomParameterDescription(name),
-				value.valueInput, value.units.strip())
+				value.valueInput, unitsManager.formatUnits(value.units))
 
 		# Add all dependencies.
 		for name, entity in self.getDependencies(params).items():
