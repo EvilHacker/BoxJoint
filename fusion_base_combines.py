@@ -45,8 +45,11 @@ class BaseCombines:
 				intersectFeature.deleteMe()
 				joinFeature.deleteMe()
 				baseFeature.deleteMe()
+				adsk.core.Application.log("Deleting stuffs")
+								
 			else:
 				# Add operations to this target body.
+				adsk.core.Application.log("Add operations to this target body")
 				orderedOpsByTargetBodyId[targetBodyId] = ops or _BooleanOperations(targetBody)
 
 				# Add the existing features related this target body.
@@ -66,11 +69,23 @@ class BaseCombines:
 		# Create or update the features for each target body.
 		for targetBodyId, ops in orderedOpsByTargetBodyId.items():
 			# Get existing features (if any).
+			adsk.core.Application.log("Get existing features (if any)")
 			baseFeature, joinFeature, intersectFeature = existingFeaturesByTargetBodyId.get(
 				targetBodyId, (None, None, None))
 
 			# Modify a copy of the original target body.
-			targetBody = ops.targetBody
+			
+			# OG targetBody = ops.targetBody
+
+			# Find targetBody in current model, not a stale reference
+			bodies = {b.name: b for b in component.bRepBodies}
+			targetBody = bodies.get(ops.targetBody.name)
+
+			if not targetBody:
+				print(f"[ERROR] Could not resolve target body: {ops.targetBody.name}")
+				continue  # skip this one safely
+
+			adsk.core.Application.log("targetBody")
 			modifiedTargetBody = tempBrepMgr.copy(targetBody)
 			for operation in ops.operations:
 				tempBrepMgr.booleanOperation(

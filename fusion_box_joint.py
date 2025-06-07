@@ -26,15 +26,15 @@ class BoxJointParameters:
 	maxFingers: Parameter = field(
 		default_factory=lambda: Parameter(33))
 	minFingerWidth: Parameter = field(
-		default_factory=lambda: Parameter.length(centimeters=cmOrIn(2.5, 1)))  # 2.5cm or 1"
+		default_factory=lambda: Parameter.length(centimeters=cmOrIn(1.5, 0.75)))  # 1.5cm or 3/4"
 	maxFingerWidth: Parameter = field(
-		default_factory=lambda: Parameter.length(centimeters=cmOrIn(15, 6)))  # 15cm or 6"
+		default_factory=lambda: Parameter.length(centimeters=cmOrIn(3, 1.25)))  # 3cm or 1.25"
 	fingerRatio: Parameter = field(
 		default_factory=lambda: Parameter(0.5))
 	margin: Parameter = field(
 		default_factory=lambda: Parameter.length(centimeters=0))
 	bitDiameter: Parameter = field(
-		default_factory=lambda: Parameter.length(centimeters=0.635))  # 1/4"
+		default_factory=lambda: Parameter.length(centimeters=0))  # 0"
 
 
 class BoxJointAddIn(FusionCustomFeatureAddIn):
@@ -286,8 +286,9 @@ def computeBoxJoint(params: BoxJointParameters) -> BaseCombines:
 	margin = max(params.margin.value, 0)
 
 	# Add all possible target bodies in case there are no operations on some.
-	for face in faces:
+	for face in faces:		
 		baseCombines.addTargetBody(face.body)
+		adsk.core.Application.log("Face")
 
 	# Compute the box joint between each pair of faces.
 	for faceA, faceB, buttingFace in getAllButtingFaces(faces):
