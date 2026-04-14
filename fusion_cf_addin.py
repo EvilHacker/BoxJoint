@@ -2,6 +2,7 @@ import adsk.core
 import adsk.fusion
 import contextlib
 import itertools
+from typing import Union
 
 from .fusion_util import *
 
@@ -114,7 +115,9 @@ class FusionCustomFeatureAddIn:
 		command = eventArgs.command
 		customFeature = userInterface.activeSelections[0].entity
 		self._editedCustomFeature = customFeature
-		params = self.customFeatureToParams(customFeature)
+		params = self.customFeatureToParams(
+			customFeature,
+			self._parametersFromCustomFeature(customFeature))
 
 		self.createInputs(command, params)
 		command.activate.add(self._activateHandler)
@@ -133,7 +136,9 @@ class FusionCustomFeatureAddIn:
 		savedTimelineObject = currentTimelineObject()
 
 		customFeature.timelineObject.rollTo(rollBefore=True)
-		params = self.customFeatureToParams(customFeature)
+		params = self.customFeatureToParams(
+			customFeature,
+			self._parametersFromCustomFeature(customFeature))
 		features = list(customFeature.features)
 		customFeature.setStartAndEndFeatures(None, None)
 		customFeature.timelineObject.rollTo(rollBefore=False)
@@ -160,7 +165,9 @@ class FusionCustomFeatureAddIn:
 		customFeature.timelineObject.rollTo(rollBefore = True)
 		command.beginStep()
 
-		params = self.customFeatureToParams(customFeature)
+		params = self.customFeatureToParams(
+			customFeature,
+			self._parametersFromCustomFeature(customFeature))
 		with self.computeDisabled():
 			self.paramsToInputs(params, command.commandInputs)
 
@@ -252,8 +259,18 @@ class FusionCustomFeatureAddIn:
 		customFeature.timelineObject.rollTo(rollBefore=True)
 
 		# Update all custom feature parameters.
+		parameters = {param.id: param for param in customFeature.parameters}
 		for name, value in self.getCustomParameters(params).items():
-			customFeature.parameters.itemById(name).expression = value.expression
+			parameter = parameters.get(name)
+			if parameter is not None:
+				parameter.expression = value.expression
+			else:
+				# The parameter doesn't exist because this feature was
+				# created by an older version of this add-in.
+				# Add the parameter as a custom named value instead.
+				customFeature.customNamedValues.addOrSetValue(
+					f'param:{name}',
+					f'{value.expression}:{value.units}')
 
 		# Update all dependencies.
 		customFeature.dependencies.deleteAll()
@@ -295,7 +312,11 @@ class FusionCustomFeatureAddIn:
 	def inputsToParams(self, commandInputs: adsk.core.CommandInputs):
 		return self.defaultParams()
 
-	def customFeatureToParams(self, feature: adsk.fusion.CustomFeature):
+	def customFeatureToParams(
+		self,
+		feature: adsk.fusion.CustomFeature,
+		consolidatedParameters: dict[str, Union[adsk.fusion.CustomFeatureParameter, Parameter]],
+	) -> dict[str, Parameter]:
 		return self.defaultParams()
 
 	def getCustomParameters(self, params) -> dict[str, Parameter]:
@@ -319,6 +340,23 @@ class FusionCustomFeatureAddIn:
 		allowFeatureCreationAndDeletion: bool
 	) -> list[adsk.fusion.Feature]:
 		return existingFeatures
+
+	def _parametersFromCustomFeature(
+		self,
+		feature: adsk.fusion.CustomFeature,
+	) -> dict[str, Union[adsk.fusion.CustomFeatureParameter, Parameter]]:
+		parameters = {param.id: param for param in feature.parameters}
+
+		# Be compatible with features created by an older version of this add-in.
+		# Also include any parameters that were stored as custom named values.
+		customNamedValues = feature.customNamedValues
+		for i in range(customNamedValues.count):
+			name = customNamedValues.idByIndex(i)
+			if name.startswith('param:'):
+				expression, units = customNamedValues.value(name).split(':', 1)
+				parameters[name[len('param:'):]] = Parameter(value=expression, units=units)
+
+		return parameters
 
 	@contextlib.contextmanager
 	def computeDisabled(self):

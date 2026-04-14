@@ -4,6 +4,7 @@ from dataclasses import dataclass, field
 import itertools
 import math
 import re
+from typing import Union
 
 from .fusion_brep_util import *
 from .fusion_base_combines import BaseCombines
@@ -200,22 +201,26 @@ class BoxJointAddIn(FusionCustomFeatureAddIn):
 			bitDiameter=Parameter(commandInputs.itemById('bitDiameter')),
 		)
 
-	def customFeatureToParams(self, feature: adsk.fusion.CustomFeature) -> BoxJointParameters:
+	def customFeatureToParams(
+			self,
+			feature: adsk.fusion.CustomFeature,
+			parameters: dict[str, Union[adsk.fusion.CustomFeatureParameter, Parameter]],
+	) -> BoxJointParameters:
 		customNamedValues = feature.customNamedValues
-		parameters = feature.parameters
 
 		faces = [EntityRef(token) for token in
 			customNamedValues.value('faces').split()]
 
+		zeroLength = Parameter.length(0)
 		return BoxJointParameters(
 			faces=faces,
-			minFingers=Parameter(parameters.itemById('minFingers')),
-			maxFingers=Parameter(parameters.itemById('maxFingers')),
-			minFingerWidth=Parameter(parameters.itemById('minFingerWidth')),
-			maxFingerWidth=Parameter(parameters.itemById('maxFingerWidth')),
-			fingerRatio=Parameter(parameters.itemById('fingerRatio') or 0.5),
-			margin=Parameter(parameters.itemById('margin') or 0),
-			bitDiameter=Parameter(parameters.itemById('bitDiameter') or 0),
+			minFingers=Parameter(parameters.get('minFingers')),
+			maxFingers=Parameter(parameters.get('maxFingers')),
+			minFingerWidth=Parameter(parameters.get('minFingerWidth')),
+			maxFingerWidth=Parameter(parameters.get('maxFingerWidth')),
+			fingerRatio=Parameter(parameters.get('fingerRatio', 0.5)),
+			margin=Parameter(parameters.get('margin', zeroLength)),
+			bitDiameter=Parameter(parameters.get('bitDiameter', zeroLength)),
 		)
 
 	def getCustomParameters(self, params: BoxJointParameters) -> dict[str, Parameter]:
