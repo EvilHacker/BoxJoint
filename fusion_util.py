@@ -57,18 +57,6 @@ def currentTimelineObject() -> adsk.fusion.TimelineObject:
 	return timeline[timeline.markerPosition - 1]
 
 
-def newValueInput(value) -> adsk.core.ValueInput:
-	if isinstance(value, str):
-		return adsk.core.ValueInput.createByString(value)
-	if isinstance(value, (float, int)):
-		return adsk.core.ValueInput.createByReal(value)
-	if isinstance(value, bool):
-		return adsk.core.ValueInput.createByBoolean(value)
-	if isinstance(value, adsk.core.Base):
-		return adsk.core.ValueInput.createByObject(value)
-	return None
-
-
 def cmOrIn(centimeters: float, inches: float) -> float:
 	# Choose a length in centimeters or inches based on user preferences.
 	design: adsk.fusion.Design = adsk.core.Application.get().activeProduct

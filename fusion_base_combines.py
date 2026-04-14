@@ -1,4 +1,3 @@
-import adsk.core
 import adsk.fusion
 from dataclasses import dataclass, field
 
