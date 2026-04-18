@@ -353,7 +353,7 @@ def computeBoxJoint(params: BoxJointParameters) -> BaseCombines:
 		pB: adsk.core.Point3D = buttingFace.geometry.intersectWithLine(sweepLine)
 		sweepVector = pB.vectorTo(jointOrigin)
 		overlap = createObliquePrism(buttingFace, sweepVector)
-		tempBrepMgr.booleanOperation(overlap, bodyA, adsk.fusion.BooleanTypes.IntersectionBooleanType)
+		intersect(overlap, bodyA)
 		tempBrepMgr.transform(overlap, jointToNominal)
 		overlapBox = overlap.boundingBox
 		minX, minY, minZ = overlapBox.minPoint.asArray()
@@ -432,8 +432,8 @@ def computeBoxJoint(params: BoxJointParameters) -> BaseCombines:
 				])
 				slope = createPrism(slopeCrossSection, fingerBWidth + clearanceAxial)
 				translateZ(slope, -clearanceAxial / 2)
-				tempBrepMgr.booleanOperation(fingerACutter, slope, adsk.fusion.BooleanTypes.DifferenceBooleanType)
-				tempBrepMgr.booleanOperation(fingerBJoiner, slope, adsk.fusion.BooleanTypes.DifferenceBooleanType)
+				difference(fingerACutter, slope)
+				difference(fingerBJoiner, slope)
 			except RuntimeError as e:
 				# Ignore if slope is too tiny.
 				if not any('ASM_WIRE_SELF_INTERSECTS' in arg for arg in e.args):
@@ -445,11 +445,11 @@ def computeBoxJoint(params: BoxJointParameters) -> BaseCombines:
 					adsk.core.Line3D.create(pBe, pI),
 				])
 				slope = createPrism(slopeCrossSection, -(fingerAWidth + margin))
-				tempBrepMgr.booleanOperation(fingerACutter, slope, adsk.fusion.BooleanTypes.UnionBooleanType)
-				tempBrepMgr.booleanOperation(fingerBJoiner, slope, adsk.fusion.BooleanTypes.UnionBooleanType)
+				union(fingerACutter, slope)
+				union(fingerBJoiner, slope)
 				slope = createPrism(slopeCrossSection, fingerBWidth + fingerAWidth + margin)
-				tempBrepMgr.booleanOperation(fingerACutter, slope, adsk.fusion.BooleanTypes.UnionBooleanType)
-				tempBrepMgr.booleanOperation(fingerBJoiner, slope, adsk.fusion.BooleanTypes.UnionBooleanType)
+				union(fingerACutter, slope)
+				union(fingerBJoiner, slope)
 			except RuntimeError as e:
 				# Ignore if slope is too tiny.
 				if not any('ASM_WIRE_SELF_INTERSECTS' in arg for arg in e.args):
@@ -542,14 +542,14 @@ def computeBoxJoint(params: BoxJointParameters) -> BaseCombines:
 			])
 			cove = createObliquePrism(coveCrossSection, vBeIbe)
 			translateZ(cove, clearanceAxial / -2)
-			tempBrepMgr.booleanOperation(fingerACutter, cove, adsk.fusion.BooleanTypes.UnionBooleanType)
+			union(fingerACutter, cove)
 			translateZ(cove, fingerBWidth + clearanceAxial)
-			tempBrepMgr.booleanOperation(fingerACutter, cove, adsk.fusion.BooleanTypes.UnionBooleanType)
+			union(fingerACutter, cove)
 			cove = createObliquePrism(coveCrossSection, vBcIc)
 			translateZ(cove, clearanceAxial / 2)
-			tempBrepMgr.booleanOperation(fingerBJoiner, cove, adsk.fusion.BooleanTypes.UnionBooleanType)
+			union(fingerBJoiner, cove)
 			translateZ(cove, fingerBWidth - clearanceAxial)
-			tempBrepMgr.booleanOperation(fingerBJoiner, cove, adsk.fusion.BooleanTypes.UnionBooleanType)
+			union(fingerBJoiner, cove)
 
 			# Add rounded inside corners to the fingers on body A.
 			coveCrossSection = createFaceFromCurves([
@@ -571,14 +571,14 @@ def computeBoxJoint(params: BoxJointParameters) -> BaseCombines:
 			])
 			cove = createObliquePrism(coveCrossSection, vAcIc)
 			translateZ(cove, clearanceAxial / -2)
-			tempBrepMgr.booleanOperation(fingerACutter, cove, adsk.fusion.BooleanTypes.DifferenceBooleanType)
+			difference(fingerACutter, cove)
 			translateZ(cove, fingerBWidth + clearanceAxial)
-			tempBrepMgr.booleanOperation(fingerACutter, cove, adsk.fusion.BooleanTypes.DifferenceBooleanType)
+			difference(fingerACutter, cove)
 			cove = createObliquePrism(coveCrossSection, vAeIae)
 			translateZ(cove, clearanceAxial / 2)
-			tempBrepMgr.booleanOperation(fingerBJoiner, cove, adsk.fusion.BooleanTypes.DifferenceBooleanType)
+			difference(fingerBJoiner, cove)
 			translateZ(cove, fingerBWidth - clearanceAxial)
-			tempBrepMgr.booleanOperation(fingerBJoiner, cove, adsk.fusion.BooleanTypes.DifferenceBooleanType)
+			difference(fingerBJoiner, cove)
 
 			# Add dog bones (T-bones) on the inside face of body A.
 			dogBoneCrossSection = createFaceFromCurves([
@@ -589,15 +589,15 @@ def computeBoxJoint(params: BoxJointParameters) -> BaseCombines:
 			])
 			dogBone = createObliquePrism(dogBoneCrossSection, vAeI)
 			translateZ(dogBone, clearanceAxial / -2)
-			tempBrepMgr.booleanOperation(fingerACutter, dogBone, adsk.fusion.BooleanTypes.UnionBooleanType)
+			union(fingerACutter, dogBone)
 			translateZ(dogBone, fingerBWidth + clearanceAxial)
-			tempBrepMgr.booleanOperation(fingerACutter, dogBone, adsk.fusion.BooleanTypes.UnionBooleanType)
+			union(fingerACutter, dogBone)
 			if isAcute:
 				try:
 					dogBone = createObliquePrism(dogBoneCrossSection, vOAPerp)
-					tempBrepMgr.booleanOperation(fingerACutter, dogBone, adsk.fusion.BooleanTypes.UnionBooleanType)
+					union(fingerACutter, dogBone)
 					translateZ(dogBone, fingerBWidth)
-					tempBrepMgr.booleanOperation(fingerACutter, dogBone, adsk.fusion.BooleanTypes.UnionBooleanType)
+					union(fingerACutter, dogBone)
 				except RuntimeError as e:
 					if not any('ASM_OSCULATING_CURVES' in arg for arg in e.args):
 						raise
@@ -609,7 +609,7 @@ def computeBoxJoint(params: BoxJointParameters) -> BaseCombines:
 							adsk.core.Line3D.create(pIbDown, pIcDown),
 						]),
 						adsk.core.Vector3D.create(0, 0, fingerBWidth + bitDiameter))
-					tempBrepMgr.booleanOperation(fingerACutter, dogBoneWedge, adsk.fusion.BooleanTypes.UnionBooleanType)
+					union(fingerACutter, dogBoneWedge)
 				except RuntimeError as e:
 					# Ignore if wedge is too tiny.
 					if not any('ASM_WIRE_SELF_INTERSECTS' in arg for arg in e.args):
@@ -624,15 +624,15 @@ def computeBoxJoint(params: BoxJointParameters) -> BaseCombines:
 			])
 			dogBone = createObliquePrism(dogBoneCrossSection, vBeI)
 			translateZ(dogBone, clearanceAxial / 2)
-			tempBrepMgr.booleanOperation(fingerBJoiner, dogBone, adsk.fusion.BooleanTypes.DifferenceBooleanType)
+			difference(fingerBJoiner, dogBone)
 			translateZ(dogBone, fingerBWidth - clearanceAxial)
-			tempBrepMgr.booleanOperation(fingerBJoiner, dogBone, adsk.fusion.BooleanTypes.DifferenceBooleanType)
+			difference(fingerBJoiner, dogBone)
 			if isAcute:
 				try:
 					dogBone = createObliquePrism(dogBoneCrossSection, vOBPerp)
-					tempBrepMgr.booleanOperation(fingerBJoiner, dogBone, adsk.fusion.BooleanTypes.DifferenceBooleanType)
+					difference(fingerBJoiner, dogBone)
 					translateZ(dogBone, fingerBWidth)
-					tempBrepMgr.booleanOperation(fingerBJoiner, dogBone, adsk.fusion.BooleanTypes.DifferenceBooleanType)
+					difference(fingerBJoiner, dogBone)
 				except RuntimeError as e:
 					if not any('ASM_OSCULATING_CURVES' in arg for arg in e.args):
 						raise
@@ -644,9 +644,9 @@ def computeBoxJoint(params: BoxJointParameters) -> BaseCombines:
 							adsk.core.Line3D.create(pIaDown, pIcDown),
 						]),
 						adsk.core.Vector3D.create(0, 0, bitDiameter))
-					tempBrepMgr.booleanOperation(fingerBJoiner, dogBoneWedge, adsk.fusion.BooleanTypes.DifferenceBooleanType)
+					difference(fingerBJoiner, dogBoneWedge)
 					translateZ(dogBoneWedge, fingerBWidth)
-					tempBrepMgr.booleanOperation(fingerBJoiner, dogBoneWedge, adsk.fusion.BooleanTypes.DifferenceBooleanType)
+					difference(fingerBJoiner, dogBoneWedge)
 				except RuntimeError as e:
 					# Ignore if wedge is too tiny.
 					if not any('ASM_WIRE_SELF_INTERSECTS' in arg for arg in e.args):
@@ -658,7 +658,7 @@ def computeBoxJoint(params: BoxJointParameters) -> BaseCombines:
 
 			finger = tempBrepMgr.copy(fingerACutter)
 			translateZ(finger, fingerZ)
-			tempBrepMgr.booleanOperation(finger, overlap, adsk.fusion.BooleanTypes.IntersectionBooleanType)
+			intersect(finger, overlap)
 			tempBrepMgr.transform(finger, nominalToJoint)
 			baseCombines.add(BooleanOperation.difference(
 				targetBody=bodyA,
@@ -666,7 +666,7 @@ def computeBoxJoint(params: BoxJointParameters) -> BaseCombines:
 
 			finger = tempBrepMgr.copy(fingerBJoiner)
 			translateZ(finger, fingerZ)
-			tempBrepMgr.booleanOperation(finger, overlap, adsk.fusion.BooleanTypes.IntersectionBooleanType)
+			intersect(finger, overlap)
 			tempBrepMgr.transform(finger, nominalToJoint)
 			baseCombines.add(BooleanOperation.union(
 				targetBody=bodyB,

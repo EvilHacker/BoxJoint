@@ -194,6 +194,18 @@ def translate(body: adsk.fusion.BRepBody, dx: float, dy: float, dz: float) -> ad
 	return body
 
 
+def difference(targetBody: adsk.fusion.BRepBody, toolBody: adsk.fusion.BRepBody) -> bool:
+	return tempBrepMgr.booleanOperation(targetBody, toolBody, adsk.fusion.BooleanTypes.DifferenceBooleanType)
+
+
+def intersect(targetBody: adsk.fusion.BRepBody, toolBody: adsk.fusion.BRepBody) -> bool:
+	return tempBrepMgr.booleanOperation(targetBody, toolBody, adsk.fusion.BooleanTypes.IntersectionBooleanType)
+
+
+def union(targetBody: adsk.fusion.BRepBody, toolBody: adsk.fusion.BRepBody) -> bool:
+	return tempBrepMgr.booleanOperation(targetBody, toolBody, adsk.fusion.BooleanTypes.UnionBooleanType)
+
+
 def boundingBoxBody(body: adsk.fusion.BRepBody, margin = 0) -> adsk.fusion.BRepBody:
 	"""
 	Create a body that represents the bounding box of the given `body`.
