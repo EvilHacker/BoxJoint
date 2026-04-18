@@ -36,6 +36,8 @@ class BoxJointParameters:
 		default_factory=lambda: Parameter.length(centimeters=0))
 	bitDiameter: Parameter = field(
 		default_factory=lambda: Parameter.length(centimeters=0.635))  # 1/4"
+	clearanceAxial: Parameter = field(
+		default_factory=lambda: Parameter.length(centimeters=0))
 
 
 class BoxJointAddIn(FusionCustomFeatureAddIn):
@@ -126,6 +128,14 @@ class BoxJointAddIn(FusionCustomFeatureAddIn):
 		input.isMinimumInclusive = True
 		input.isMinimumLimited = True
 
+		input = inputs.addValueInput(
+			'clearanceAxial', 'Axial Clearance',
+			unitType=params.clearanceAxial.units,
+			initialValue=params.clearanceAxial.valueInput)
+		input.minimumValue = 0
+		input.isMinimumInclusive = True
+		input.isMinimumLimited = True
+
 		# For error message output.
 		inputs.addTextBoxCommandInput('error', '', '', numRows=1, isReadOnly=True)
 
@@ -183,6 +193,7 @@ class BoxJointAddIn(FusionCustomFeatureAddIn):
 		commandInputs.itemById('fingerRatio').expression = params.fingerRatio.expression
 		commandInputs.itemById('margin').expression = params.margin.expression
 		commandInputs.itemById('bitDiameter').expression = params.bitDiameter.expression
+		commandInputs.itemById('clearanceAxial').expression = params.clearanceAxial.expression
 
 	def inputsToParams(self, commandInputs: adsk.core.CommandInputs) -> BoxJointParameters:
 		facesInput: adsk.core.SelectionCommandInput = commandInputs.itemById('faces')
@@ -199,6 +210,7 @@ class BoxJointAddIn(FusionCustomFeatureAddIn):
 			fingerRatio=Parameter(commandInputs.itemById('fingerRatio')),
 			margin=Parameter(commandInputs.itemById('margin')),
 			bitDiameter=Parameter(commandInputs.itemById('bitDiameter')),
+			clearanceAxial=Parameter(commandInputs.itemById('clearanceAxial')),
 		)
 
 	def customFeatureToParams(
@@ -221,6 +233,7 @@ class BoxJointAddIn(FusionCustomFeatureAddIn):
 			fingerRatio=Parameter(parameters.get('fingerRatio', 0.5)),
 			margin=Parameter(parameters.get('margin', zeroLength)),
 			bitDiameter=Parameter(parameters.get('bitDiameter', zeroLength)),
+			clearanceAxial=Parameter(parameters.get('clearanceAxial', zeroLength)),
 		)
 
 	def getCustomParameters(self, params: BoxJointParameters) -> dict[str, Parameter]:
@@ -232,6 +245,7 @@ class BoxJointAddIn(FusionCustomFeatureAddIn):
 			'fingerRatio': params.fingerRatio,
 			'margin': params.margin,
 			'bitDiameter': params.bitDiameter,
+			'clearanceAxial': params.clearanceAxial,
 		}
 
 	def getCustomParameterDescriptions(self) -> dict[str, str]:
@@ -243,6 +257,7 @@ class BoxJointAddIn(FusionCustomFeatureAddIn):
 			'fingerRatio': 'Finger Ratio',
 			'margin': 'Margin',
 			'bitDiameter': 'Tool Diameter',
+			'clearanceAxial': 'Axial Clearance',
 		}
 
 	def getCustomNamedValues(self, params: BoxJointParameters) -> dict[str, str]:
@@ -289,6 +304,7 @@ def computeBoxJoint(params: BoxJointParameters) -> BaseCombines:
 	rAB = (1 - fingerRatio) / fingerRatio
 	rBA = fingerRatio / (1 - fingerRatio)
 	margin = max(params.margin.value, 0)
+	clearanceAxial = max(params.clearanceAxial.value, 0)
 
 	# Add all possible target bodies in case there are no operations on some.
 	for face in faces:
@@ -366,15 +382,20 @@ def computeBoxJoint(params: BoxJointParameters) -> BaseCombines:
 		length = fingerAWidth + math.floor(fingers / 2) * (fingerAWidth + fingerBWidth)
 		margin = (lengthWithMargins - length) / 2
 
-		# Create a transformation matrix that will be reused for all upward translations.
-		translateUp = adsk.core.Matrix3D.create()
-		translateUp.setCell(2, 3, fingerBWidth)
+		# Limit axial clearance.
+		clearanceAxial = min(clearanceAxial,
+			0.99 * fingerAWidth,
+			0.99 * fingerBWidth,
+			fingerAWidth - 0.0001,
+			fingerBWidth - 0.0001)
 
-		# Create a template for a single B finger.
-		finger = createSimpleBox(
-			minX, minY, minZ,
-			maxX - minX, maxY - minY, fingerBWidth)
-		fingerACutter = fingerBJoiner = finger
+		# Create templates for a single B finger.
+		fingerACutter = createSimpleBox(
+			minX, minY, minZ - clearanceAxial / 2,
+			maxX - minX, maxY - minY, fingerBWidth + clearanceAxial)
+		fingerBJoiner = createSimpleBox(
+			minX, minY, minZ + clearanceAxial / 2,
+			maxX - minX, maxY - minY, fingerBWidth - clearanceAxial)
 
 		# Define various reference points and vectors on the finger cross-section.
 		pO = jointOrigin.copy()
@@ -409,8 +430,10 @@ def computeBoxJoint(params: BoxJointParameters) -> BaseCombines:
 					adsk.core.Line3D.create(pAe, pA),
 					adsk.core.Line3D.create(pA, pI),
 				])
-				slope = createPrism(slopeCrossSection, fingerBWidth)
-				tempBrepMgr.booleanOperation(finger, slope, adsk.fusion.BooleanTypes.DifferenceBooleanType)
+				slope = createPrism(slopeCrossSection, fingerBWidth + clearanceAxial)
+				translateZ(slope, -clearanceAxial / 2)
+				tempBrepMgr.booleanOperation(fingerACutter, slope, adsk.fusion.BooleanTypes.DifferenceBooleanType)
+				tempBrepMgr.booleanOperation(fingerBJoiner, slope, adsk.fusion.BooleanTypes.DifferenceBooleanType)
 			except RuntimeError as e:
 				# Ignore if slope is too tiny.
 				if not any('ASM_WIRE_SELF_INTERSECTS' in arg for arg in e.args):
@@ -422,9 +445,11 @@ def computeBoxJoint(params: BoxJointParameters) -> BaseCombines:
 					adsk.core.Line3D.create(pBe, pI),
 				])
 				slope = createPrism(slopeCrossSection, -(fingerAWidth + margin))
-				tempBrepMgr.booleanOperation(finger, slope, adsk.fusion.BooleanTypes.UnionBooleanType)
+				tempBrepMgr.booleanOperation(fingerACutter, slope, adsk.fusion.BooleanTypes.UnionBooleanType)
+				tempBrepMgr.booleanOperation(fingerBJoiner, slope, adsk.fusion.BooleanTypes.UnionBooleanType)
 				slope = createPrism(slopeCrossSection, fingerBWidth + fingerAWidth + margin)
-				tempBrepMgr.booleanOperation(finger, slope, adsk.fusion.BooleanTypes.UnionBooleanType)
+				tempBrepMgr.booleanOperation(fingerACutter, slope, adsk.fusion.BooleanTypes.UnionBooleanType)
+				tempBrepMgr.booleanOperation(fingerBJoiner, slope, adsk.fusion.BooleanTypes.UnionBooleanType)
 			except RuntimeError as e:
 				# Ignore if slope is too tiny.
 				if not any('ASM_WIRE_SELF_INTERSECTS' in arg for arg in e.args):
@@ -497,9 +522,6 @@ def computeBoxJoint(params: BoxJointParameters) -> BaseCombines:
 				pUbDown = pIcDown.copy()
 				pUbDown.translateBy(vOBPerp)
 
-			fingerACutter = finger
-			fingerBJoiner = tempBrepMgr.copy(finger)
-
 			# Add rounded inside corners to the fingers on body B.
 			coveCrossSection = createFaceFromCurves([
 				adsk.core.Arc3D.createByCenter(
@@ -519,12 +541,14 @@ def computeBoxJoint(params: BoxJointParameters) -> BaseCombines:
 				adsk.core.Line3D.create(pBeUp, pBeDown),
 			])
 			cove = createObliquePrism(coveCrossSection, vBeIbe)
+			translateZ(cove, clearanceAxial / -2)
 			tempBrepMgr.booleanOperation(fingerACutter, cove, adsk.fusion.BooleanTypes.UnionBooleanType)
-			tempBrepMgr.transform(cove, translateUp)
+			translateZ(cove, fingerBWidth + clearanceAxial)
 			tempBrepMgr.booleanOperation(fingerACutter, cove, adsk.fusion.BooleanTypes.UnionBooleanType)
 			cove = createObliquePrism(coveCrossSection, vBcIc)
+			translateZ(cove, clearanceAxial / 2)
 			tempBrepMgr.booleanOperation(fingerBJoiner, cove, adsk.fusion.BooleanTypes.UnionBooleanType)
-			tempBrepMgr.transform(cove, translateUp)
+			translateZ(cove, fingerBWidth - clearanceAxial)
 			tempBrepMgr.booleanOperation(fingerBJoiner, cove, adsk.fusion.BooleanTypes.UnionBooleanType)
 
 			# Add rounded inside corners to the fingers on body A.
@@ -546,12 +570,14 @@ def computeBoxJoint(params: BoxJointParameters) -> BaseCombines:
 				adsk.core.Line3D.create(pAeDown, pAeUp),
 			])
 			cove = createObliquePrism(coveCrossSection, vAcIc)
+			translateZ(cove, clearanceAxial / -2)
 			tempBrepMgr.booleanOperation(fingerACutter, cove, adsk.fusion.BooleanTypes.DifferenceBooleanType)
-			tempBrepMgr.transform(cove, translateUp)
+			translateZ(cove, fingerBWidth + clearanceAxial)
 			tempBrepMgr.booleanOperation(fingerACutter, cove, adsk.fusion.BooleanTypes.DifferenceBooleanType)
 			cove = createObliquePrism(coveCrossSection, vAeIae)
+			translateZ(cove, clearanceAxial / 2)
 			tempBrepMgr.booleanOperation(fingerBJoiner, cove, adsk.fusion.BooleanTypes.DifferenceBooleanType)
-			tempBrepMgr.transform(cove, translateUp)
+			translateZ(cove, fingerBWidth - clearanceAxial)
 			tempBrepMgr.booleanOperation(fingerBJoiner, cove, adsk.fusion.BooleanTypes.DifferenceBooleanType)
 
 			# Add dog bones (T-bones) on the inside face of body A.
@@ -562,14 +588,15 @@ def computeBoxJoint(params: BoxJointParameters) -> BaseCombines:
 					radius=bitRadius),
 			])
 			dogBone = createObliquePrism(dogBoneCrossSection, vAeI)
+			translateZ(dogBone, clearanceAxial / -2)
 			tempBrepMgr.booleanOperation(fingerACutter, dogBone, adsk.fusion.BooleanTypes.UnionBooleanType)
-			tempBrepMgr.transform(dogBone, translateUp)
+			translateZ(dogBone, fingerBWidth + clearanceAxial)
 			tempBrepMgr.booleanOperation(fingerACutter, dogBone, adsk.fusion.BooleanTypes.UnionBooleanType)
 			if isAcute:
 				try:
 					dogBone = createObliquePrism(dogBoneCrossSection, vOAPerp)
 					tempBrepMgr.booleanOperation(fingerACutter, dogBone, adsk.fusion.BooleanTypes.UnionBooleanType)
-					tempBrepMgr.transform(dogBone, translateUp)
+					translateZ(dogBone, fingerBWidth)
 					tempBrepMgr.booleanOperation(fingerACutter, dogBone, adsk.fusion.BooleanTypes.UnionBooleanType)
 				except RuntimeError as e:
 					if not any('ASM_OSCULATING_CURVES' in arg for arg in e.args):
@@ -596,14 +623,15 @@ def computeBoxJoint(params: BoxJointParameters) -> BaseCombines:
 					radius=bitRadius),
 			])
 			dogBone = createObliquePrism(dogBoneCrossSection, vBeI)
+			translateZ(dogBone, clearanceAxial / 2)
 			tempBrepMgr.booleanOperation(fingerBJoiner, dogBone, adsk.fusion.BooleanTypes.DifferenceBooleanType)
-			tempBrepMgr.transform(dogBone, translateUp)
+			translateZ(dogBone, fingerBWidth - clearanceAxial)
 			tempBrepMgr.booleanOperation(fingerBJoiner, dogBone, adsk.fusion.BooleanTypes.DifferenceBooleanType)
 			if isAcute:
 				try:
 					dogBone = createObliquePrism(dogBoneCrossSection, vOBPerp)
 					tempBrepMgr.booleanOperation(fingerBJoiner, dogBone, adsk.fusion.BooleanTypes.DifferenceBooleanType)
-					tempBrepMgr.transform(dogBone, translateUp)
+					translateZ(dogBone, fingerBWidth)
 					tempBrepMgr.booleanOperation(fingerBJoiner, dogBone, adsk.fusion.BooleanTypes.DifferenceBooleanType)
 				except RuntimeError as e:
 					if not any('ASM_OSCULATING_CURVES' in arg for arg in e.args):
@@ -617,7 +645,7 @@ def computeBoxJoint(params: BoxJointParameters) -> BaseCombines:
 						]),
 						adsk.core.Vector3D.create(0, 0, bitDiameter))
 					tempBrepMgr.booleanOperation(fingerBJoiner, dogBoneWedge, adsk.fusion.BooleanTypes.DifferenceBooleanType)
-					tempBrepMgr.transform(dogBoneWedge, translateUp)
+					translateZ(dogBoneWedge, fingerBWidth)
 					tempBrepMgr.booleanOperation(fingerBJoiner, dogBoneWedge, adsk.fusion.BooleanTypes.DifferenceBooleanType)
 				except RuntimeError as e:
 					# Ignore if wedge is too tiny.
@@ -626,10 +654,10 @@ def computeBoxJoint(params: BoxJointParameters) -> BaseCombines:
 
 		# Move each finger into its final position and combine with body A and body B.
 		for i in range(0, math.floor(fingers / 2)):
-			translateUp.setCell(2, 3, margin + fingerAWidth + i * (fingerAWidth + fingerBWidth))
+			fingerZ = margin + fingerAWidth + i * (fingerAWidth + fingerBWidth)
 
 			finger = tempBrepMgr.copy(fingerACutter)
-			tempBrepMgr.transform(finger, translateUp)
+			translateZ(finger, fingerZ)
 			tempBrepMgr.booleanOperation(finger, overlap, adsk.fusion.BooleanTypes.IntersectionBooleanType)
 			tempBrepMgr.transform(finger, nominalToJoint)
 			baseCombines.add(BooleanOperation.difference(
@@ -637,7 +665,7 @@ def computeBoxJoint(params: BoxJointParameters) -> BaseCombines:
 				toolBody=finger))
 
 			finger = tempBrepMgr.copy(fingerBJoiner)
-			tempBrepMgr.transform(finger, translateUp)
+			translateZ(finger, fingerZ)
 			tempBrepMgr.booleanOperation(finger, overlap, adsk.fusion.BooleanTypes.IntersectionBooleanType)
 			tempBrepMgr.transform(finger, nominalToJoint)
 			baseCombines.add(BooleanOperation.union(

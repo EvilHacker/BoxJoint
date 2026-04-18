@@ -152,6 +152,48 @@ def createObliquePrism(base: adsk.fusion.BRepFace, direction: adsk.core.Vector3D
 	return definitionOfBody(prism).createBody()
 
 
+def translateX(body: adsk.fusion.BRepBody, distance: float) -> adsk.fusion.BRepBody:
+	"""
+	Translate the given `body` in the X direction by the given `distance`.
+	"""
+	translation = adsk.core.Matrix3D.create()
+	translation.setCell(0, 3, distance)
+	tempBrepMgr.transform(body, translation)
+	return body
+
+
+def translateY(body: adsk.fusion.BRepBody, distance: float) -> adsk.fusion.BRepBody:
+	"""
+	Translate the given `body` in the Y direction by the given `distance`.
+	"""
+	translation = adsk.core.Matrix3D.create()
+	translation.setCell(1, 3, distance)
+	tempBrepMgr.transform(body, translation)
+	return body
+
+
+def translateZ(body: adsk.fusion.BRepBody, distance: float) -> adsk.fusion.BRepBody:
+	"""
+	Translate the given `body` in the Z direction by the given `distance`.
+	"""
+	translation = adsk.core.Matrix3D.create()
+	translation.setCell(2, 3, distance)
+	tempBrepMgr.transform(body, translation)
+	return body
+
+
+def translate(body: adsk.fusion.BRepBody, dx: float, dy: float, dz: float) -> adsk.fusion.BRepBody:
+	"""
+	Translate the given `body` in the X, Y, and Z directions.
+	"""
+	translation = adsk.core.Matrix3D.create()
+	translation.setCell(0, 3, dx)
+	translation.setCell(1, 3, dy)
+	translation.setCell(2, 3, dz)
+	tempBrepMgr.transform(body, translation)
+	return body
+
+
 def boundingBoxBody(body: adsk.fusion.BRepBody, margin = 0) -> adsk.fusion.BRepBody:
 	"""
 	Create a body that represents the bounding box of the given `body`.
