@@ -343,14 +343,14 @@ def computeBoxJoint(params: BoxJointParameters) -> BaseCombines:
 			faceBInwardNormal.scaleBy(-1)
 			planeB.normal = faceBInwardNormal
 
-		# Define actual Joint and Nominal coordinate systems.
+		# Define a local coordinate system relative to the axis of the joint.
 		outerEdge = planeB.intersectWithPlane(planeA)
 		jointOrigin = outerEdge.origin
 		jointZAxis = outerEdge.direction
 		jointYAxis = faceAInwardNormal
 		jointXAxis = faceAInwardNormal.crossProduct(jointZAxis)
-		jointToNominal = adsk.core.Matrix3D.create()
-		jointToNominal.setToAlignCoordinateSystems(
+		globalToLocal = adsk.core.Matrix3D.create()
+		globalToLocal.setToAlignCoordinateSystems(
 			fromOrigin=jointOrigin,
 			fromXAxis=jointXAxis,
 			fromYAxis=jointYAxis,
@@ -359,8 +359,8 @@ def computeBoxJoint(params: BoxJointParameters) -> BaseCombines:
 			toXAxis=adsk.core.Vector3D.create(1, 0, 0),
 			toYAxis=adsk.core.Vector3D.create(0, 1, 0),
 			toZAxis=adsk.core.Vector3D.create(0, 0, 1))
-		nominalToJoint = jointToNominal.copy()
-		nominalToJoint.invert()
+		localToGlobal = globalToLocal.copy()
+		localToGlobal.invert()
 
 		# Sweep the butting face to define the overlapping region between
 		# body A and body B where the joint will be created.
@@ -370,7 +370,7 @@ def computeBoxJoint(params: BoxJointParameters) -> BaseCombines:
 		sweepVector = pB.vectorTo(jointOrigin)
 		overlap = createObliquePrism(buttingFace, sweepVector)
 		intersect(overlap, bodyA)
-		tempBrepMgr.transform(overlap, jointToNominal)
+		tempBrepMgr.transform(overlap, globalToLocal)
 		overlapBox = overlap.boundingBox
 		minX, minY, minZ = overlapBox.minPoint.asArray()
 		maxX, maxY, maxZ = overlapBox.maxPoint.asArray()
@@ -407,9 +407,9 @@ def computeBoxJoint(params: BoxJointParameters) -> BaseCombines:
 
 		# Define various reference points and vectors on the finger cross-section.
 		pO = jointOrigin.copy()
-		pO.transformBy(jointToNominal)
+		pO.transformBy(globalToLocal)
 		pO.z = minZ
-		pB.transformBy(jointToNominal)
+		pB.transformBy(globalToLocal)
 		pB.z = minZ
 		vOB = pO.vectorTo(pB)
 		vOBPerp = adsk.core.Vector3D.create(vOB.y, -vOB.x, 0)
@@ -708,7 +708,7 @@ def computeBoxJoint(params: BoxJointParameters) -> BaseCombines:
 			# Cut this finger from body A.
 			finger = tempBrepMgr.copy(fingerACutter)
 			translateZ(finger, fingerZ)
-			tempBrepMgr.transform(finger, nominalToJoint)
+			tempBrepMgr.transform(finger, localToGlobal)
 			baseCombines.add(BooleanOperation.difference(
 				targetBody=bodyA,
 				toolBody=finger))
@@ -720,14 +720,14 @@ def computeBoxJoint(params: BoxJointParameters) -> BaseCombines:
 
 		# Add the joint area to body B.
 		joinerB = createPrism(crossSection, lengthWithMargins)
-		tempBrepMgr.transform(joinerB, nominalToJoint)
+		tempBrepMgr.transform(joinerB, localToGlobal)
 		intersect(joinerB, bodyA)
 		baseCombines.add(BooleanOperation.union(
 			targetBody=bodyB,
 			toolBody=joinerB))
 
 		# Cut all fingers from body B.
-		tempBrepMgr.transform(cutterB, nominalToJoint)
+		tempBrepMgr.transform(cutterB, localToGlobal)
 		baseCombines.add(BooleanOperation.difference(
 			targetBody=bodyB,
 			toolBody=cutterB))
