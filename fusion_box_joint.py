@@ -637,9 +637,9 @@ def computeBoxJoint(params: BoxJointParameters) -> BaseCombines:
 			if isAcute:
 				try:
 					dogBone = createObliquePrism(dogBoneCrossSection, vOAPerp)
-					translateX(dogBone, clearanceLateral)
+					translate(dogBone, clearanceLateral, 0, clearanceAxial / -2)
 					union(fingerACutter, dogBone)
-					translateZ(dogBone, fingerBWidth)
+					translateZ(dogBone, fingerBWidth + clearanceAxial)
 					union(fingerACutter, dogBone)
 				except RuntimeError as e:
 					if not any('ASM_OSCULATING_CURVES' in arg for arg in e.args):
@@ -651,8 +651,8 @@ def computeBoxJoint(params: BoxJointParameters) -> BaseCombines:
 							adsk.core.Line3D.create(pUaDown, pIbDown),
 							adsk.core.Line3D.create(pIbDown, pIcDown),
 						]),
-						adsk.core.Vector3D.create(0, 0, fingerBWidth + bitDiameter))
-					translateX(dogBoneWedge, clearanceLateral)
+						adsk.core.Vector3D.create(0, 0, fingerBWidth + bitDiameter + clearanceAxial))
+					translate(dogBoneWedge, clearanceLateral, 0, clearanceAxial / -2)
 					union(fingerACutter, dogBoneWedge)
 				except RuntimeError as e:
 					# Ignore if wedge is too tiny.
@@ -674,9 +674,9 @@ def computeBoxJoint(params: BoxJointParameters) -> BaseCombines:
 			if isAcute:
 				try:
 					dogBone = createObliquePrism(dogBoneCrossSection, vOBPerp)
-					translate(dogBone, vLateralClearanceB.x, vLateralClearanceB.y, 0)
+					translate(dogBone, vLateralClearanceB.x, vLateralClearanceB.y, clearanceAxial / 2)
 					difference(fingerBJoiner, dogBone)
-					translateZ(dogBone, fingerBWidth)
+					translateZ(dogBone, fingerBWidth - clearanceAxial)
 					difference(fingerBJoiner, dogBone)
 				except RuntimeError as e:
 					if not any('ASM_OSCULATING_CURVES' in arg for arg in e.args):
@@ -688,10 +688,10 @@ def computeBoxJoint(params: BoxJointParameters) -> BaseCombines:
 							adsk.core.Line3D.create(pUbDown, pIaDown),
 							adsk.core.Line3D.create(pIaDown, pIcDown),
 						]),
-						adsk.core.Vector3D.create(0, 0, bitDiameter))
+						adsk.core.Vector3D.create(0, 0, bitDiameter + clearanceAxial / 2))
 					translate(dogBoneWedge, vLateralClearanceB.x, vLateralClearanceB.y, 0)
 					difference(fingerBJoiner, dogBoneWedge)
-					translateZ(dogBoneWedge, fingerBWidth)
+					translateZ(dogBoneWedge, fingerBWidth - clearanceAxial / 2)
 					difference(fingerBJoiner, dogBoneWedge)
 				except RuntimeError as e:
 					# Ignore if wedge is too tiny.
