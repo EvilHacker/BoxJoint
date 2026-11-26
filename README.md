@@ -36,6 +36,17 @@ This Add-In can be installed by either:
 	* `~/Library/Application Support/Autodesk/Autodesk Fusion 360/API/AddIns` (Mac OS)
 	* `%appdata%\Autodesk\Autodesk Fusion 360\API\AddIns` (Windows)
 
+## Packaging a GitHub Release
+
+From the repository root, set the tag to the release you are packaging. Its numeric version must match the version in `BoxJoint.manifest`. For example, in Bash or Git Bash:
+
+```sh
+tag=v1.1.1
+git archive --format=zip --prefix=BoxJoint/ --output="BoxJoint-${tag#v}.zip" "$tag" -- '*.py' BoxJoint.manifest Resources LICENSE privacy_policy.txt
+```
+
+Upload the resulting ZIP as an asset of the matching GitHub Release. It contains the installable `BoxJoint/` folder, including the helper modules and toolbar icons.
+
 ## Usage
 
 The Add-In can be found in the `DESIGN` Workspace, `SOLID` tab, `MODIFY` panel.
